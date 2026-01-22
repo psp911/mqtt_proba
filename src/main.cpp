@@ -13,6 +13,8 @@
 const char ssid[] = "OnePlus 10 Pro 5G-76e8";
 const char pass[] = "g3se674x";
 
+// Что то еще, проверка
+
 WiFiClient net;
 MQTTClient client;
 
