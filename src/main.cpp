@@ -15,6 +15,8 @@ const char pass[] = "g3se674x";
 
 // Что то еще, проверка
 // Что то еще, проверка 2
+// еще что то 3
+
 
 WiFiClient net;
 MQTTClient client;
