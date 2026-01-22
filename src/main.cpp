@@ -30,7 +30,6 @@ const char MQTT_PASSWORD[] = "9546595465Psp!"; // CHANGE IT IF REQUIRED, empty i
 
 
 
-
 WiFiClient net;
 MQTTClient client;
 
@@ -64,6 +63,15 @@ void messageReceived(String &topic, String &payload) {
   // or push to a queue and handle it in the loop after calling `client.loop()`.
 }
 
+void messageReceived_2(String &topic, String &payload) {
+  Serial.println("incoming: " + topic + " - " + payload);
+
+  // Note: Do not use the client in the callback to publish, subscribe or
+  // unsubscribe as it may cause deadlocks when other things arrive while
+  // sending and receiving acknowledgments. Instead, change a global variable,
+  // or push to a queue and handle it in the loop after calling `client.loop()`.
+}
+
 void setup() {
   //Serial.begin(115200);
   Serial.begin(9600);
@@ -77,9 +85,12 @@ void setup() {
   client.begin(MQTT_BROKER_ADRRESS, net);
   
   client.onMessage(messageReceived);
+  
 
   connect();
 }
+
+
 
 void loop() {
   client.loop();
@@ -93,5 +104,12 @@ void loop() {
   if (millis() - lastMillis > 5000) {
     lastMillis = millis();
     client.publish("/hello", "world");
-  }
+   }
+
+ // publish a message roughly every second.
+ //if (millis() - lastMillis > 3000) {
+ // lastMillis = millis();
+ // client.publish("/millis", (const char*)lastMillis);
+//}
+
 }
