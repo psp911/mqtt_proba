@@ -10,12 +10,25 @@
 #include <WiFi.h>
 #include <MQTT.h>
 
+// #include <MQTTClient.h>
+
 const char ssid[] = "OnePlus 10 Pro 5G-76e8";
 const char pass[] = "g3se674x";
 
 // Что то еще, проверка
 // Что то еще, проверка 2
 // еще что то 3
+
+
+//const char MQTT_BROKER_ADRRESS[] = "91.149.232.230";  // CHANGE TO MQTT BROKER'S ADDRESS
+const char MQTT_BROKER_ADRRESS[] = "77.51.217.41"; // CHANGE TO MQTT BROKER'S ADDRESS
+const int MQTT_PORT = 1883;
+//const int MQTT_PORT = 8883;
+const char MQTT_CLIENT_ID[] = "YOUR-NAME-esp32-001"; // CHANGE IT AS YOU DESIRE
+const char MQTT_USERNAME[] = "userMosquitoPSP"; // CHANGE IT IF REQUIRED, empty if not required
+const char MQTT_PASSWORD[] = "9546595465Psp!"; // CHANGE IT IF REQUIRED, empty if not required
+
+
 
 
 WiFiClient net;
@@ -31,7 +44,7 @@ void connect() {
   }
 
   Serial.print("\nconnecting...");
-  while (!client.connect("arduino", "public", "public")) {
+  while (!client.connect(MQTT_CLIENT_ID, MQTT_USERNAME, MQTT_PASSWORD)) {
     Serial.print(".>.");
     delay(1000);
   }
@@ -58,7 +71,11 @@ void setup() {
 
   // Note: Local domain names (e.g. "Computer.local" on OSX) are not supported
   // by Arduino. You need to set the IP address directly.
-  client.begin("public.cloud.shiftr.io", net);
+  
+  //client.begin("public.cloud.shiftr.io", net);
+
+  client.begin(MQTT_BROKER_ADRRESS, net);
+  
   client.onMessage(messageReceived);
 
   connect();
