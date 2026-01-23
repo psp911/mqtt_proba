@@ -28,13 +28,18 @@ const char MQTT_CLIENT_ID[] = "YOUR-NAME-esp32-001"; // CHANGE IT AS YOU DESIRE
 const char MQTT_USERNAME[] = "userMosquitoPSP"; // CHANGE IT IF REQUIRED, empty if not required
 const char MQTT_PASSWORD[] = "9546595465Psp!"; // CHANGE IT IF REQUIRED, empty if not required
 
+//Внешний датчик Холла
+const int hallPin = 25;     // Пин, к которому подключен DO датчика
+const int ledPin = 2;       // Встроенный светодиод (или внешний)
+int hallState = 0;
 
 
 WiFiClient net;
 MQTTClient client;
 
 unsigned long lastMillis = 0;
-unsigned long lastMillis_2 = 0;
+unsigned long lastMillis_wifi = 0;
+unsigned long count_fps = 0;
 //unsigned long time = 0;
 
 void connect() {
@@ -54,6 +59,8 @@ void connect() {
 
   client.subscribe("/hello");
   client.subscribe("/times");
+  client.subscribe("/fps");
+  client.subscribe("/hall");
   // client.unsubscribe("/hello");
 }
 
@@ -77,23 +84,40 @@ void setup() {
   
   //client.begin("public.cloud.shiftr.io", net);
 
-  client.begin(MQTT_BROKER_ADRRESS, net);
-  
+  client.begin(MQTT_BROKER_ADRRESS, net);  
   client.onMessage(messageReceived);
-  
-
   connect();
+
+  pinMode(ledPin, OUTPUT);
+  pinMode(hallPin, INPUT); // Датчик A3144 выдает логический сигнал
+
 }
 
 
 
 void loop() {
-  client.loop();
-  delay(500);  // <- fixes some issues with WiFi stability
 
-  if (!client.connected()) {
-    connect();
-  }
+  hallState = digitalRead(hallPin);
+
+  client.loop();
+  //delay(500);  // <- fixes some issues with WiFi stability
+count_fps=count_fps+1; // счетчик итераций
+lastMillis_wifi = millis();
+
+  // publish a message roughly every second.
+  if (millis() - lastMillis_wifi > 1000) {
+    //lastMillis = millis();
+    if (!client.connected()) {
+      connect();
+    }
+
+   }
+
+
+
+  // if (!client.connected()) {
+  //   connect();
+  // }
 
   // publish a message roughly every second.
   if (millis() - lastMillis > 1000) {
@@ -108,7 +132,41 @@ void loop() {
     client.publish("/times", buffer);
 
 
+    //char buffer[12]; // Буфер достаточного размера
+    sprintf(buffer, "%lu", count_fps); // %lu для unsigned long
+    // Теперь buffer содержит строку, например, "12345"
+    client.publish("/fps", buffer);
+
+
+    count_fps=0;
+
+  int hallValue = hallRead(); // Чтение значения датчика Холла
+  Serial.print("Значение: ");
+  Serial.println(hallValue);
+
+    //char buffer[12]; // Буфер достаточного размера
+    sprintf(buffer, "%lu", hallValue); // %lu для unsigned long
+    // Теперь buffer содержит строку, например, "12345"
+    client.publish("/hall", buffer);
+
+
+
+
+      // Если магнитное поле обнаружено (выход LOW)
+      if (hallState == LOW) {
+        digitalWrite(ledPin, HIGH); // Включить светодиод
+        Serial.println("Магнит обнаружен!");
+      } else {
+        digitalWrite(ledPin, LOW);  // Выключить светодиод
+        Serial.println("Магнита нет");
+      }
+
+
+
    }
+
+
+
 
 
 
