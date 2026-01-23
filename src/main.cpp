@@ -34,6 +34,13 @@ const int ledPin = 2;       // Встроенный светодиод (или �
 int hallState = 0;
 
 
+// Пины
+//const int hallPin = 18; // Пин, к которому подключен выход датчика
+volatile unsigned int pulseCount = 0;
+unsigned long lastMillis_rpm = 0;
+float rpm = 0;
+
+
 WiFiClient net;
 MQTTClient client;
 
@@ -61,6 +68,8 @@ void connect() {
   client.subscribe("/times");
   client.subscribe("/fps");
   client.subscribe("/hall");
+  client.subscribe("/rpm");
+  client.subscribe("/pulseCount");
   // client.unsubscribe("/hello");
 }
 
@@ -72,6 +81,13 @@ void messageReceived(String &topic, String &payload) {
   // sending and receiving acknowledgments. Instead, change a global variable,
   // or push to a queue and handle it in the loop after calling `client.loop()`.
 }
+
+
+// Прерывание: срабатывает при появлении магнита
+void IRAM_ATTR handleInterrupt() {
+  pulseCount++;
+}
+
 
 
 void setup() {
@@ -90,6 +106,11 @@ void setup() {
 
   pinMode(ledPin, OUTPUT);
   pinMode(hallPin, INPUT); // Датчик A3144 выдает логический сигнал
+
+  //pinMode(hallPin, INPUT_PULLUP); // Используем встроенную подтяжку, если модуль без нее
+  attachInterrupt(digitalPinToInterrupt(hallPin), handleInterrupt, FALLING); // FALLING - переход с HIGH на LOW
+
+
 
 }
 
@@ -162,6 +183,36 @@ lastMillis_wifi = millis();
       }
 
 
+
+  // Расчет RPM каждую секунду
+  if (millis() - lastMillis_rpm >= 1000) {
+    detachInterrupt(digitalPinToInterrupt(hallPin)); // Отключаем прерывания на время расчета
+
+    // RPM = (импульсы за сек) * 60
+    rpm = (pulseCount * 60.0); 
+
+    Serial.print("RPM: ");
+    Serial.println(rpm);
+
+   //char buffer[12]; // Буфер достаточного размера
+    sprintf(buffer, "%lu", rpm); // %lu для unsigned long
+    // Теперь buffer содержит строку, например, "12345"
+    client.publish("/rpm", buffer);
+
+    //char buffer[12]; // Буфер достаточного размера
+    sprintf(buffer, "%lu", pulseCount); // %lu для unsigned long
+    // Теперь buffer содержит строку, например, "12345"
+    client.publish("/pulseCount", buffer);
+
+
+    pulseCount = 0; // Сбрасываем счетчик
+    lastMillis_rpm = millis(); // Обновляем время
+    attachInterrupt(digitalPinToInterrupt(hallPin), handleInterrupt, FALLING); // Включаем прерывания
+
+ 
+
+
+  }
 
    }
 
