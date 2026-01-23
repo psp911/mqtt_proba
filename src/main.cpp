@@ -141,7 +141,7 @@ lastMillis_wifi = millis();
   // }
 
   // publish a message roughly every second.
-  if (millis() - lastMillis > 1000) {
+  if (millis() - lastMillis > 5000) {
     lastMillis = millis();
     client.publish("/hello", "world");
 
@@ -185,7 +185,7 @@ lastMillis_wifi = millis();
 
 
   // Расчет RPM каждую секунду
-  if (millis() - lastMillis_rpm >= 1000) {
+  if (millis() - lastMillis_rpm >= 5000) {
     detachInterrupt(digitalPinToInterrupt(hallPin)); // Отключаем прерывания на время расчета
 
     // RPM = (импульсы за сек) * 60
@@ -194,12 +194,12 @@ lastMillis_wifi = millis();
     Serial.print("RPM: ");
     Serial.println(rpm);
 
-   //char buffer[12]; // Буфер достаточного размера
+    char buffer[12]; // Буфер достаточного размера
     sprintf(buffer, "%lu", rpm); // %lu для unsigned long
     // Теперь buffer содержит строку, например, "12345"
     client.publish("/rpm", buffer);
 
-    //char buffer[12]; // Буфер достаточного размера
+    //char buffer[15]; // Буфер достаточного размера
     sprintf(buffer, "%lu", pulseCount); // %lu для unsigned long
     // Теперь buffer содержит строку, например, "12345"
     client.publish("/pulseCount", buffer);
