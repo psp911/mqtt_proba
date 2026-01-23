@@ -34,23 +34,26 @@ WiFiClient net;
 MQTTClient client;
 
 unsigned long lastMillis = 0;
+unsigned long lastMillis_2 = 0;
+unsigned long time = 0;
 
 void connect() {
   Serial.print("checking wifi...");
   while (WiFi.status() != WL_CONNECTED) {
     Serial.print("./.");
-    delay(1000);
+    delay(2000);
   }
 
   Serial.print("\nconnecting...");
   while (!client.connect(MQTT_CLIENT_ID, MQTT_USERNAME, MQTT_PASSWORD)) {
     Serial.print(".>.");
-    delay(1000);
+    delay(3000);
   }
 
   Serial.println("\nconnected!");
 
   client.subscribe("/hello");
+  client.subscribe("/hello/2");
   // client.unsubscribe("/hello");
 }
 
@@ -63,14 +66,6 @@ void messageReceived(String &topic, String &payload) {
   // or push to a queue and handle it in the loop after calling `client.loop()`.
 }
 
-void messageReceived_2(String &topic, String &payload) {
-  Serial.println("incoming: " + topic + " - " + payload);
-
-  // Note: Do not use the client in the callback to publish, subscribe or
-  // unsubscribe as it may cause deadlocks when other things arrive while
-  // sending and receiving acknowledgments. Instead, change a global variable,
-  // or push to a queue and handle it in the loop after calling `client.loop()`.
-}
 
 void setup() {
   //Serial.begin(115200);
@@ -94,7 +89,7 @@ void setup() {
 
 void loop() {
   client.loop();
-  delay(10);  // <- fixes some issues with WiFi stability
+  delay(500);  // <- fixes some issues with WiFi stability
 
   if (!client.connected()) {
     connect();
@@ -106,10 +101,17 @@ void loop() {
     client.publish("/hello", "world");
    }
 
- // publish a message roughly every second.
- //if (millis() - lastMillis > 3000) {
- // lastMillis = millis();
- // client.publish("/millis", (const char*)lastMillis);
-//}
+  // publish a message roughly every second.
+  if (millis() - lastMillis_2 > 4000) {
+    lastMillis_2 = millis();
+
+    time = millis();
+    char buffer[12]; // Буфер достаточного размера
+    sprintf(buffer, "%lu", time); // %lu для unsigned long
+    // Теперь buffer содержит строку, например, "12345"
+
+
+    client.publish("/hello/2", buffer);
+   }
 
 }
