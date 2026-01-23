@@ -35,7 +35,7 @@ MQTTClient client;
 
 unsigned long lastMillis = 0;
 unsigned long lastMillis_2 = 0;
-unsigned long time = 0;
+//unsigned long time = 0;
 
 void connect() {
   Serial.print("checking wifi...");
@@ -53,7 +53,7 @@ void connect() {
   Serial.println("\nconnected!");
 
   client.subscribe("/hello");
-  client.subscribe("/hello/2");
+  client.subscribe("/times");
   // client.unsubscribe("/hello");
 }
 
@@ -96,22 +96,20 @@ void loop() {
   }
 
   // publish a message roughly every second.
-  if (millis() - lastMillis > 5000) {
+  if (millis() - lastMillis > 1000) {
     lastMillis = millis();
     client.publish("/hello", "world");
-   }
 
-  // publish a message roughly every second.
-  if (millis() - lastMillis_2 > 4000) {
-    lastMillis_2 = millis();
 
-    time = millis();
+    //time = millis();
     char buffer[12]; // Буфер достаточного размера
-    sprintf(buffer, "%lu", time); // %lu для unsigned long
+    sprintf(buffer, "%lu", lastMillis); // %lu для unsigned long
     // Теперь buffer содержит строку, например, "12345"
+    client.publish("/times", buffer);
 
 
-    client.publish("/hello/2", buffer);
    }
+
+
 
 }
