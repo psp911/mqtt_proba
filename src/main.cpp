@@ -31,14 +31,10 @@ const char MQTT_PASSWORD[] = "9546595465Psp!"; // CHANGE IT IF REQUIRED, empty i
 //Внешний датчик Холла
 const int hallPin = 25;     // Пин, к которому подключен DO датчика
 const int ledPin = 2;       // Встроенный светодиод (или внешний)
-int hallState = 0;
-
-
-// Пины
-//const int hallPin = 18; // Пин, к которому подключен выход датчика
-volatile unsigned int pulseCount = 0;
+int hallState = 0;          // Состояние датчика Холла
+volatile unsigned int pulseCount = 0; //Счетчик импульсов датчика Холла
 unsigned long lastMillis_rpm = 0;
-float rpm = 0;
+int rpm = 0; // Оборотов в минуту (float)
 
 
 WiFiClient net;
@@ -50,7 +46,7 @@ unsigned long count_fps = 0;
 //unsigned long time = 0;
 
 void connect() {
-  Serial.print("checking wifi...");
+  Serial.print("checking wifi...  (Проверка WiFi... ) ");
   while (WiFi.status() != WL_CONNECTED) {
     Serial.print("./.");
     delay(2000);
@@ -67,7 +63,7 @@ void connect() {
   client.subscribe("/hello");
   client.subscribe("/times");
   client.subscribe("/fps");
-  client.subscribe("/hall");
+  client.subscribe("/hall_Inner");
   client.subscribe("/rpm");
   client.subscribe("/pulseCount");
   // client.unsubscribe("/hello");
@@ -118,7 +114,7 @@ void setup() {
 
 void loop() {
 
-  hallState = digitalRead(hallPin);
+  // hallState = digitalRead(hallPin);  //Считываем состояние пина датчика Холла
 
   client.loop();
   //delay(500);  // <- fixes some issues with WiFi stability
@@ -126,6 +122,7 @@ count_fps=count_fps+1; // счетчик итераций
 lastMillis_wifi = millis();
 
   // publish a message roughly every second.
+  // По моему тут коннектимся к МКУТТ серверу на чаще раза в секунду, если коннекта нету
   if (millis() - lastMillis_wifi > 1000) {
     //lastMillis = millis();
     if (!client.connected()) {
@@ -134,11 +131,6 @@ lastMillis_wifi = millis();
 
    }
 
-
-
-  // if (!client.connected()) {
-  //   connect();
-  // }
 
   // publish a message roughly every second.
   if (millis() - lastMillis > 5000) {
@@ -154,71 +146,62 @@ lastMillis_wifi = millis();
 
 
     //char buffer[12]; // Буфер достаточного размера
-    sprintf(buffer, "%lu", count_fps); // %lu для unsigned long
+    sprintf(buffer, "%i", count_fps); // %lu для unsigned long
     // Теперь buffer содержит строку, например, "12345"
     client.publish("/fps", buffer);
 
 
     count_fps=0;
 
-  int hallValue = hallRead(); // Чтение значения датчика Холла
-  Serial.print("Значение: ");
-  Serial.println(hallValue);
-
-    //char buffer[12]; // Буфер достаточного размера
-    sprintf(buffer, "%lu", hallValue); // %lu для unsigned long
-    // Теперь buffer содержит строку, например, "12345"
-    client.publish("/hall", buffer);
 
 
-
-
-      // Если магнитное поле обнаружено (выход LOW)
-      if (hallState == LOW) {
-        digitalWrite(ledPin, HIGH); // Включить светодиод
-        Serial.println("Магнит обнаружен!");
-      } else {
-        digitalWrite(ledPin, LOW);  // Выключить светодиод
-        Serial.println("Магнита нет");
-      }
-
-
-
-  // Расчет RPM каждую секунду
-  if (millis() - lastMillis_rpm >= 5000) {
-    detachInterrupt(digitalPinToInterrupt(hallPin)); // Отключаем прерывания на время расчета
-
-    // RPM = (импульсы за сек) * 60
-    rpm = (pulseCount * 60.0); 
-
-    Serial.print("RPM: ");
-    Serial.println(rpm);
-
-    char buffer[12]; // Буфер достаточного размера
-    sprintf(buffer, "%lu", rpm); // %lu для unsigned long
-    // Теперь buffer содержит строку, например, "12345"
-    client.publish("/rpm", buffer);
-
-    //char buffer[15]; // Буфер достаточного размера
-    sprintf(buffer, "%lu", pulseCount); // %lu для unsigned long
-    // Теперь buffer содержит строку, например, "12345"
-    client.publish("/pulseCount", buffer);
-
-
-    pulseCount = 0; // Сбрасываем счетчик
-    lastMillis_rpm = millis(); // Обновляем время
-    attachInterrupt(digitalPinToInterrupt(hallPin), handleInterrupt, FALLING); // Включаем прерывания
-
- 
-
-
-  }
+      // // Если магнитное поле обнаружено (выход LOW)
+      // if (hallState == LOW) {
+      //   digitalWrite(ledPin, HIGH); // Включить светодиод
+      //   Serial.println("Магнит обнаружен!");
+      // } else {
+      //   digitalWrite(ledPin, LOW);  // Выключить светодиод
+      //   Serial.println("Магнита нет");
+      // }
 
    }
 
+   
+
+   // Расчет RPM каждую секунду
+   if (millis() - lastMillis_rpm >= 1000) {
+     detachInterrupt(digitalPinToInterrupt(hallPin)); // Отключаем прерывания на время расчета
+ 
+     // RPM = (импульсы за сек) * 60
+     rpm = (pulseCount * 60); 
+ 
+     Serial.print("RPM: ");
+     Serial.println(rpm);
+ 
+     Serial.print("pulseCount: ");
+     Serial.println(pulseCount);
+ 
+     char buffer[12]; // Буфер достаточного размера
+     sprintf(buffer, "%i", rpm); // %lu для unsigned long
+     // Теперь buffer содержит строку, например, "12345"
+     client.publish("/rpm", buffer);
+ 
+     sprintf(buffer, "%d", pulseCount); // %lu для unsigned long
+     // Теперь buffer содержит строку, например, "12345"
+     client.publish("/pulseCount", buffer);
+ 
+     Serial.print("pulseCount_buffer: ");
+     Serial.println(buffer);
 
 
+     pulseCount = 0; // Сбрасываем счетчик
+     lastMillis_rpm = millis(); // Обновляем время
+ 
+ 
+     
+   }
 
+  attachInterrupt(digitalPinToInterrupt(hallPin), handleInterrupt, FALLING); // Включаем прерывания
 
 
 }
