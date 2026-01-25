@@ -64,7 +64,7 @@ void connect() {
   client.subscribe("/hello");
   client.subscribe("/times");
   client.subscribe("/fps");
-  client.subscribe("/hall_Inner");
+  // client.subscribe("/hall_Inner");
   client.subscribe("/rpm");
   client.subscribe("/pulseCount");
   // client.unsubscribe("/hello");
@@ -115,8 +115,6 @@ void setup() {
   pinMode(ledPin, OUTPUT);
   pinMode(hallPin, INPUT); // Датчик A3144 выдает логический сигнал
 
-  turnover=0;
-  last_turnover=0;
 
   //pinMode(hallPin, INPUT_PULLUP); // Используем встроенную подтяжку, если модуль без нее
   attachInterrupt(digitalPinToInterrupt(hallPin), handleInterrupt, FALLING); // FALLING - переход с HIGH на LOW
@@ -177,15 +175,15 @@ lastMillis_wifi = millis();
      lastMillis = millis();
      client.publish("/hello", "world");
  
-/*  
+  
      //time = millis();
      char buffer[12]; // Буфер достаточного размера
      sprintf(buffer, "%lu", lastMillis); // %lu для unsigned long
      // Теперь buffer содержит строку, например, "12345"
      client.publish("/times", buffer);
  
-  */
-     char buffer[12]; // Буфер достаточного размера
+
+     //char buffer[12]; // Буфер достаточного размера
      sprintf(buffer, "%i", count_fps); // %lu для unsigned long
      // Теперь buffer содержит строку, например, "12345"
      client.publish("/fps", buffer);
