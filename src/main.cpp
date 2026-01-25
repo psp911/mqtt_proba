@@ -32,7 +32,8 @@ const char MQTT_PASSWORD[] = "9546595465Psp!"; // CHANGE IT IF REQUIRED, empty i
 const int hallPin = 25;     // Пин, к которому подключен DO датчика
 const int ledPin = 2;       // Встроенный светодиод (или внешний)
 int hallState = 0;          // Состояние датчика Холла
-volatile unsigned int pulseCount = 0; //Счетчик импульсов датчика Холла
+volatile unsigned int pulseCount = 0; // Счетчик импульсов датчика Холла
+volatile unsigned int pulseCount_ditry = 0; // Счетчик импульсов датчика Холла c Дребезгом
 unsigned long lastMillis_rpm = 0;
 int rpm = 0; // Оборотов в минуту (float)
 
@@ -78,10 +79,21 @@ void messageReceived(String &topic, String &payload) {
   // or push to a queue and handle it in the loop after calling `client.loop()`.
 }
 
+volatile unsigned long turnover = 0;
+volatile unsigned long last_turnover = 0;
+volatile unsigned long turnover_time = 0; 
 
 // Прерывание: срабатывает при появлении магнита
 void IRAM_ATTR handleInterrupt() {
-  pulseCount++;
+  turnover = micros()-last_turnover; //Вычисляить время между двумя обротами (почему двумя а не одним??)
+  if (turnover >20000)
+  {
+    turnover_time=turnover;
+    Serial.println(turnover_time);
+    last_turnover=micros();
+    pulseCount++;
+  }
+  pulseCount_ditry++;
 }
 
 
@@ -102,6 +114,9 @@ void setup() {
 
   pinMode(ledPin, OUTPUT);
   pinMode(hallPin, INPUT); // Датчик A3144 выдает логический сигнал
+
+  turnover=0;
+  last_turnover=0;
 
   //pinMode(hallPin, INPUT_PULLUP); // Используем встроенную подтяжку, если модуль без нее
   attachInterrupt(digitalPinToInterrupt(hallPin), handleInterrupt, FALLING); // FALLING - переход с HIGH на LOW
@@ -181,6 +196,10 @@ lastMillis_wifi = millis();
      Serial.print("pulseCount: ");
      Serial.println(pulseCount);
  
+     Serial.print("pulseCount_ditry: ");
+     Serial.println(pulseCount_ditry);
+
+
      char buffer[12]; // Буфер достаточного размера
      sprintf(buffer, "%i", rpm); // %lu для unsigned long
      // Теперь buffer содержит строку, например, "12345"
