@@ -50,13 +50,13 @@ void connect() {
   Serial.print("checking wifi...  (Проверка WiFi... ) ");
   while (WiFi.status() != WL_CONNECTED) {
     Serial.print("./.");
-    delay(2000);
+    //delay(2000);
   }
 
   Serial.print("\nconnecting...");
   while (!client.connect(MQTT_CLIENT_ID, MQTT_USERNAME, MQTT_PASSWORD)) {
     Serial.print(".>.");
-    delay(3000);
+    //delay(3000);
   }
 
   Serial.println("\nconnected!");
@@ -149,24 +149,10 @@ lastMillis_wifi = millis();
 
   // publish a message roughly every second.
   if (millis() - lastMillis > 5000) {
-    lastMillis = millis();
-    client.publish("/hello", "world");
 
 
-    //time = millis();
-    char buffer[12]; // Буфер достаточного размера
-    sprintf(buffer, "%lu", lastMillis); // %lu для unsigned long
-    // Теперь buffer содержит строку, например, "12345"
-    client.publish("/times", buffer);
 
-
-    //char buffer[12]; // Буфер достаточного размера
-    sprintf(buffer, "%i", count_fps); // %lu для unsigned long
-    // Теперь buffer содержит строку, например, "12345"
-    client.publish("/fps", buffer);
-
-
-    count_fps=0;
+    
 
 
 
@@ -185,8 +171,25 @@ lastMillis_wifi = millis();
 
    // Расчет RPM каждую секунду
    if (millis() - lastMillis_rpm >= 1000) {
+
      detachInterrupt(digitalPinToInterrupt(hallPin)); // Отключаем прерывания на время расчета
  
+     lastMillis = millis();
+     client.publish("/hello", "world");
+ 
+/*  
+     //time = millis();
+     char buffer[12]; // Буфер достаточного размера
+     sprintf(buffer, "%lu", lastMillis); // %lu для unsigned long
+     // Теперь buffer содержит строку, например, "12345"
+     client.publish("/times", buffer);
+ 
+  */
+     char buffer[12]; // Буфер достаточного размера
+     sprintf(buffer, "%i", count_fps); // %lu для unsigned long
+     // Теперь buffer содержит строку, например, "12345"
+     client.publish("/fps", buffer);
+
      // RPM = (импульсы за сек) * 60
      rpm = (pulseCount * 60); 
  
@@ -200,7 +203,7 @@ lastMillis_wifi = millis();
      Serial.println(pulseCount_ditry);
 
 
-     char buffer[12]; // Буфер достаточного размера
+     //char buffer[12]; // Буфер достаточного размера
      sprintf(buffer, "%i", rpm); // %lu для unsigned long
      // Теперь buffer содержит строку, например, "12345"
      client.publish("/rpm", buffer);
@@ -209,14 +212,14 @@ lastMillis_wifi = millis();
      // Теперь buffer содержит строку, например, "12345"
      client.publish("/pulseCount", buffer);
  
-     Serial.print("pulseCount_buffer: ");
-     Serial.println(buffer);
+/*      Serial.print("pulseCount_buffer: ");
+     Serial.println(buffer); */
 
 
      pulseCount = 0; // Сбрасываем счетчик
      lastMillis_rpm = millis(); // Обновляем время
  
- 
+     count_fps=0;
      
    }
 
