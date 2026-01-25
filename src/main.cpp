@@ -210,9 +210,6 @@ lastMillis_wifi = millis();
      // Теперь buffer содержит строку, например, "12345"
      client.publish("/pulseCount", buffer);
  
-/*      Serial.print("pulseCount_buffer: ");
-     Serial.println(buffer); */
-
 
      pulseCount = 0; // Сбрасываем счетчик
      lastMillis_rpm = millis(); // Обновляем время
