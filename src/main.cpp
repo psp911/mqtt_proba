@@ -9,6 +9,7 @@
 
 #include <WiFi.h>
 #include <MQTT.h>
+#include "GyverSegment.h"
 
 // #include <MQTTClient.h>
 
@@ -146,7 +147,7 @@ lastMillis_wifi = millis();
 
 
   // publish a message roughly every second.
-  if (millis() - lastMillis > 5000) {
+  if (millis() - lastMillis > 500) {
 
 
 
@@ -172,13 +173,12 @@ lastMillis_wifi = millis();
 
      detachInterrupt(digitalPinToInterrupt(hallPin)); // Отключаем прерывания на время расчета
  
-     lastMillis = millis();
      client.publish("/hello", "world");
  
   
      //time = millis();
      char buffer[12]; // Буфер достаточного размера
-     sprintf(buffer, "%lu", lastMillis); // %lu для unsigned long
+     sprintf(buffer, "%lu", lastMillis_rpm); // %lu для unsigned long
      // Теперь buffer содержит строку, например, "12345"
      client.publish("/times", buffer);
  
@@ -215,10 +215,11 @@ lastMillis_wifi = millis();
      lastMillis_rpm = millis(); // Обновляем время
  
      count_fps=0;
-     
-   }
 
-  attachInterrupt(digitalPinToInterrupt(hallPin), handleInterrupt, FALLING); // Включаем прерывания
+     attachInterrupt(digitalPinToInterrupt(hallPin), handleInterrupt, FALLING); // Включаем прерывания
+
+   }
+  
 
 
 }
