@@ -9,18 +9,16 @@
 
 #include <WiFi.h>
 #include <MQTT.h>
-#include "GyverSegment.h"
 
 // #include <MQTTClient.h>
 
-const char ssid[] = "OnePlus 10 Pro 5G-76e8";
-const char pass[] = "g3se674x";
+//const char ssid[] = "OnePlus 10 Pro 5G-76e8";
+//const char pass[] = "g3se674x";
 
-// Что то еще, проверка
-// Что то еще, проверка 2
-// еще что то 3
+const char ssid[] = "4G-UFI-C70D";
+const char pass[] = "9546595465Hotspot!";
 
-
+/* 
 //const char MQTT_BROKER_ADRRESS[] = "91.149.232.230";  // CHANGE TO MQTT BROKER'S ADDRESS
 const char MQTT_BROKER_ADRRESS[] = "77.51.217.41"; // CHANGE TO MQTT BROKER'S ADDRESS
 const int MQTT_PORT = 1883;
@@ -28,6 +26,16 @@ const int MQTT_PORT = 1883;
 const char MQTT_CLIENT_ID[] = "YOUR-NAME-esp32-001"; // CHANGE IT AS YOU DESIRE
 const char MQTT_USERNAME[] = "userMosquitoPSP"; // CHANGE IT IF REQUIRED, empty if not required
 const char MQTT_PASSWORD[] = "9546595465Psp!"; // CHANGE IT IF REQUIRED, empty if not required
+ */
+
+//const char MQTT_BROKER_ADRRESS[] = "91.149.232.230";  // CHANGE TO MQTT BROKER'S ADDRESS
+const char MQTT_BROKER_ADRRESS[] = "192.168.100.237"; // CHANGE TO MQTT BROKER'S ADDRESS
+const int MQTT_PORT = 1883;
+//const int MQTT_PORT = 8883;
+const char MQTT_CLIENT_ID[] = "YOUR-NAME-esp32-001"; // CHANGE IT AS YOU DESIRE
+const char MQTT_USERNAME[] = "mosquitto-user"; // CHANGE IT IF REQUIRED, empty if not required
+const char MQTT_PASSWORD[] = "pass"; // CHANGE IT IF REQUIRED, empty if not required
+
 
 //Внешний датчик Холла
 const int hallPin = 25;     // Пин, к которому подключен DO датчика
@@ -104,10 +112,6 @@ void setup() {
   Serial.begin(9600);
   WiFi.begin(ssid, pass);
 
-  // Note: Local domain names (e.g. "Computer.local" on OSX) are not supported
-  // by Arduino. You need to set the IP address directly.
-  
-  //client.begin("public.cloud.shiftr.io", net);
 
   client.begin(MQTT_BROKER_ADRRESS, net);  
   client.onMessage(messageReceived);
@@ -128,12 +132,15 @@ void setup() {
 
 void loop() {
 
-  // hallState = digitalRead(hallPin);  //Считываем состояние пина датчика Холла
 
-  client.loop();
+   client.loop();
+
+
   //delay(500);  // <- fixes some issues with WiFi stability
-count_fps=count_fps+1; // счетчик итераций
-lastMillis_wifi = millis();
+  count_fps=count_fps+1; // счетчик итераций
+  
+  // Временной флаг для соединения по WiFi
+  lastMillis_wifi = millis();
 
   // publish a message roughly every second.
   // По моему тут коннектимся к МКУТТ серверу на чаще раза в секунду, если коннекта нету
@@ -146,47 +153,17 @@ lastMillis_wifi = millis();
    }
 
 
-  // publish a message roughly every second.
-  if (millis() - lastMillis > 500) {
-
-
-
     
-
-
-
-      // // Если магнитное поле обнаружено (выход LOW)
-      // if (hallState == LOW) {
-      //   digitalWrite(ledPin, HIGH); // Включить светодиод
-      //   Serial.println("Магнит обнаружен!");
-      // } else {
-      //   digitalWrite(ledPin, LOW);  // Выключить светодиод
-      //   Serial.println("Магнита нет");
-      // }
-
-   }
-
-   
 
    // Расчет RPM каждую секунду
    if (millis() - lastMillis_rpm >= 1000) {
 
      detachInterrupt(digitalPinToInterrupt(hallPin)); // Отключаем прерывания на время расчета
  
-     client.publish("/hello", "world");
+     //client.publish("/hello", "world");
  
   
-     //time = millis();
-     char buffer[12]; // Буфер достаточного размера
-     sprintf(buffer, "%lu", lastMillis_rpm); // %lu для unsigned long
-     // Теперь buffer содержит строку, например, "12345"
-     client.publish("/times", buffer);
- 
 
-     //char buffer[12]; // Буфер достаточного размера
-     sprintf(buffer, "%i", count_fps); // %lu для unsigned long
-     // Теперь buffer содержит строку, например, "12345"
-     client.publish("/fps", buffer);
 
      // RPM = (импульсы за сек) * 60
      rpm = (pulseCount * 60); 
@@ -200,6 +177,21 @@ lastMillis_wifi = millis();
      Serial.print("pulseCount_ditry: ");
      Serial.println(pulseCount_ditry);
 
+     Serial.print("count_fps: ");
+     Serial.println(count_fps);
+
+
+     //time = millis();
+     char buffer[12]; // Буфер достаточного размера
+     sprintf(buffer, "%lu", lastMillis_rpm); // %lu для unsigned long
+     // Теперь buffer содержит строку, например, "12345"
+     client.publish("/times", buffer);
+ 
+
+     //char buffer[12]; // Буфер достаточного размера
+     sprintf(buffer, "%i", count_fps); // %lu для unsigned long
+     // Теперь buffer содержит строку, например, "12345"
+     client.publish("/fps", buffer);
 
      //char buffer[12]; // Буфер достаточного размера
      sprintf(buffer, "%i", rpm); // %lu для unsigned long
@@ -210,11 +202,12 @@ lastMillis_wifi = millis();
      // Теперь buffer содержит строку, например, "12345"
      client.publish("/pulseCount", buffer);
  
+    
 
-     pulseCount = 0; // Сбрасываем счетчик
+
+     pulseCount = 0;            // Сбрасываем счетчик
      lastMillis_rpm = millis(); // Обновляем время
- 
-     count_fps=0;
+     count_fps=0;               // Сбрасываем счетчик fps
 
      attachInterrupt(digitalPinToInterrupt(hallPin), handleInterrupt, FALLING); // Включаем прерывания
 
