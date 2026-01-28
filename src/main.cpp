@@ -7,6 +7,11 @@
 // by Joël Gähwiler
 // https://github.com/256dpi/arduino-mqtt
 
+
+
+// Датчик Холла
+
+
 #include <WiFi.h>
 #include <MQTT.h>
 
@@ -76,7 +81,7 @@ void connect() {
   // client.subscribe("/hall_Inner");
   client.subscribe("/rpm");
   client.subscribe("/pulseCount");
-  // client.unsubscribe("/hello");
+  client.unsubscribe("/pulseCount_ditry");
 }
 
 void messageReceived(String &topic, String &payload) {
@@ -92,10 +97,13 @@ volatile unsigned long turnover = 0;
 volatile unsigned long last_turnover = 0;
 volatile unsigned long turnover_time = 0; 
 
+
+const int drebezg_time = 20000;       // Длина времени на дребезг, микросекунд
+
 // Прерывание: срабатывает при появлении магнита
 void IRAM_ATTR handleInterrupt() {
-  turnover = micros()-last_turnover; //Вычисляить время между двумя обротами (почему двумя а не одним??)
-  if (turnover >20000)
+  turnover = micros()-last_turnover; //Вычисляет время между двумя обротами (почему двумя а не одним??)
+  if (turnover >drebezg_time)
   {
     turnover_time=turnover;
     Serial.println(turnover_time);
@@ -202,10 +210,13 @@ void loop() {
      // Теперь buffer содержит строку, например, "12345"
      client.publish("/pulseCount", buffer);
  
-    
+     sprintf(buffer, "%d", pulseCount_ditry); // %lu для unsigned long
+     // Теперь buffer содержит строку, например, "12345"
+     client.publish("/pulseCount_ditry", buffer);    
 
 
      pulseCount = 0;            // Сбрасываем счетчик
+     pulseCount_ditry = 0;
      lastMillis_rpm = millis(); // Обновляем время
      count_fps=0;               // Сбрасываем счетчик fps
 
