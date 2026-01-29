@@ -162,6 +162,7 @@ void loop() {
 
 
     
+   
 
    // Расчет RPM каждую секунду
    if (millis() - lastMillis_rpm >= 1000) {
