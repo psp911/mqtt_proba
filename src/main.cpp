@@ -71,8 +71,8 @@ unsigned long count_fps = 0;
 void connect() {
   Serial.print("checking wifi...  (Проверка WiFi... ) ");
   while (WiFi.status() != WL_CONNECTED) {
-    Serial.print("./.");
-    delay(2000);
+    Serial.print(".//.");
+    delay(5000);
   }
 
 
@@ -89,16 +89,16 @@ void connect() {
 
   Serial.println("\nconnected!");
 
-  client.subscribe("/hello");
+  /* client.subscribe("/hello");
   client.subscribe("/times");
   client.subscribe("/fps");
-  // client.subscribe("/hall_Inner");
   client.subscribe("/rpm");
   client.subscribe("/pulseCount");
   client.unsubscribe("/pulseCount_ditry");
   client.subscribe("/ir_rpm");
   client.subscribe("/ir_pulseCount");
   client.unsubscribe("/ir_pulseCount_ditry");
+   */
 }
 
 void messageReceived(String &topic, String &payload) {
@@ -188,7 +188,7 @@ void loop() {
   //delay(500);  // <- fixes some issues with WiFi stability
   count_fps=count_fps+1; // счетчик итераций
   
-  // Временной флаг для соединения по WiFi
+  // Временной флаг для соединения по WiFi - не по WiFi а по MQTT
   lastMillis_wifi = millis();
 
   // publish a message roughly every second.
